@@ -57,10 +57,28 @@ services:
       - 9090:8080
     environment:
       - KAFKA_BROKERS=kafka-0:9092,kafka-1:9092,kafka-2:9092
+      - KAFKA_SCHEMAREGISTRY_ENABLED=true
+      - KAFKA_SCHEMAREGISTRY_URLS=http://schema-registry:8085
     networks:
       - kafka-cluster
 
-      
+  schema-registry:
+    image: confluentinc/cp-schema-registry
+    ports:
+      - "8081:8085"
+    restart: unless-stopped
+    depends_on:
+      - kafka-0
+      - kafka-1
+      - kafka-2
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'PLAINTEXT://kafka-0:9092,PLAINTEXT://kafka-1:9092'
+      SCHEMA_REGISTRY_HOST_NAME: 'schema-registry'
+      SCHEMA_REGISTRY_LISTENERS: 'http://0.0.0.0:8085'
+      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: 'INFO'
+    networks:
+      - kafka-cluster
+            
 volumes:
   kafka_0_data:
     driver: local
